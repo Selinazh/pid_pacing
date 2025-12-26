@@ -86,7 +86,7 @@ Clamped to $[0, 1]$ to ensure valid probabilities.
 
 This plot shows:
 - **Linear (blue)**: Ideal uniform delivery across campaign duration
-- **Exponential (orange)**: Front-loaded curve that delivers more early
+- **Exponential (green)**: Front-loaded curve that delivers more early
 - The EXP curve provides an upper bound, enabling more aggressive early delivery while still reaching 100% by end of campaign
 
 The exponential curve's steeper initial slope demonstrates its suitability as an upper bound for secondary allocation.
@@ -114,20 +114,6 @@ Direct comparison of:
 - Available impressions (actual traffic pattern)
 - Selected impressions via PID control
 - Selected impressions via EXP upper bound
-
----
-
-## Recommendation
-
-**Optimal Strategy**:
-1. **First round allocation (PID)**: Allocate traffic by PID probablity 
-   - Provides smooth, adaptive delivery tracking
-   - Minimizes overspend/underspend through continuous feedback
-   
-2. **Second round allocation (EXP)**: After first round, if extra exists, re-allocate traffic by front load probablity
-   - Activates when campaigns have available capacity
-   - Front-loaded delivery maximizes utilization
-   - Serves as flexible buffer for inventory redistribution
 
 ---
 
