@@ -98,7 +98,6 @@ The exponential curve's steeper initial slope demonstrates its suitability as an
 Demonstrates PID control following the ideal linear delivery pattern. The algorithm:
 - Tracks the desired cumulative spend (linear target)
 - Adjusts hourly selection probability based on real-time error
-- Recovers from traffic fluctuations through integral correction
 
 ### 3. Exponential Simulation with Traffic Pattern
 
@@ -106,8 +105,6 @@ Demonstrates PID control following the ideal linear delivery pattern. The algori
 
 Shows the EXP algorithm's behavior under the same traffic conditions:
 - Delivers more budget in early hours
-- Front-loaded nature provides buffer for unexpected traffic drops
-- Useful for high-volatility traffic scenarios
 
 ### 4. Hourly Impression Comparison
 
@@ -117,27 +114,20 @@ Direct comparison of:
 - Available impressions (actual traffic pattern)
 - Selected impressions via PID control
 - Selected impressions via EXP upper bound
-- Highlights how each algorithm responds to hourly traffic variations
 
 ---
 
 ## Recommendation
 
 **Optimal Strategy**:
-1. **Primary allocation (PID)**: Use for all campaigns as the default strategy
+1. **First round allocation (PID)**: Allocate traffic by PID probablity 
    - Provides smooth, adaptive delivery tracking
    - Minimizes overspend/underspend through continuous feedback
    
-2. **Secondary allocation (EXP)**: Apply to remaining budget/impressions
+2. **Second round allocation (EXP)**: After first round, if extra exists, re-allocate traffic by front load probablity
    - Activates when campaigns have available capacity
    - Front-loaded delivery maximizes utilization
    - Serves as flexible buffer for inventory redistribution
-
-**Advantages**:
-- ✅ Adaptive to traffic patterns (PID primary control)
-- ✅ Maximizes budget utilization (EXP upper bound secondary)
-- ✅ Prevents waste while respecting campaign constraints
-- ✅ Handles both smooth and volatile traffic scenarios
 
 ---
 
@@ -158,10 +148,10 @@ Direct comparison of:
 # Install dependencies
 pip install -r requirements.txt
 
-# Run simulations
+# Run simulations for PID and front load
 python pid_simulation.py
 
-# Generate comparison plots
+# Generate comparison plots for front load and linear load
 python plot_compare.py
 ```
 
@@ -170,9 +160,9 @@ python plot_compare.py
 ## Parameters
 
 Default configuration:
-- **Budget**: 10,000 units
-- **Runtime**: 10 hours
-- **PID Gains**: Kp=0.8, Ki=0.05, Kd=0.01
+- **Budget**: 24,000 units
+- **Runtime**: 24 hours
+- **PID Gains**: Kp=1.0472, Ki=0.00, Kd=0.2742
 - **EXP theta**: 0.2 (controls exponential curvature)
 
 These can be adjusted in the respective Python files to suit different campaign profiles.
