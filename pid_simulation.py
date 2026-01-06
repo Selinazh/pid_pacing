@@ -22,11 +22,14 @@ class PID:
 
     integral: float = 0.0
     prev_error: float = 0.0
+    derivative: float = 0.0
+    current_error: float = 0.0
 
     def update(self, error: float) -> float:
         self.integral += error * self.dt
-        derivative = (error - self.prev_error) / self.dt if self.dt > 0 else 0.0
-        out = self.Kp * error + self.Ki * self.integral + self.Kd * derivative
+        self.derivative = (error - self.prev_error) / self.dt if self.dt > 0 else 0.0
+        self.current_error = error
+        out = self.Kp * error + self.Ki * self.integral + self.Kd * self.derivative
         self.prev_error = error
         return out
 
@@ -91,17 +94,17 @@ def simulate_pid_with_opps_schedule(
     return hours, opps, desired_list, probs, selected_list, cumulative
 
 
-def simulate_pid_with_opps_schedule_exp(
+def simulate_pid_with_opps_schedule_sigmoid(
     budget: int,
     runtime_hours: float,
     opps_schedule: List[float],
     theta: float = 0.2,
     stochastic: bool = False,
 ):
-    """Simulate selection following the exponential target curve.
+    """Simulate selection following the sigmoid target curve.
 
     Target cumulative (fraction): y = 1 - (1 - x) * exp(-theta * x), x = t / runtime_hours
-    Probability is computed per-step so selected impressions track the exponential curve.
+    Probability is computed per-step so selected impressions track the sigmoid curve.
     Returns (hours, opps, desired, prob, selected, cumulative)
     """
     steps = len(opps_schedule)
@@ -122,12 +125,12 @@ def simulate_pid_with_opps_schedule_exp(
         available = float(opps_schedule[i])
 
         x_norm = t / runtime_hours
-        target_exp = budget * (1 - (1 - x_norm) * np.exp(-theta * x_norm))
+        target_sigmoid = budget * (1 - (1 - x_norm) * np.exp(-theta * x_norm))
         # linear cumulative target for reference (not used for probability calc)
         target_lin = (t / runtime_hours) * budget
 
-        # desired to meet exponential target at this time
-        desired = max(0.0, target_exp - current_selected)
+        # desired to meet sigmoid target at this time
+        desired = max(0.0, target_sigmoid - current_selected)
         # clamp desired to available impressions this step
         desired_step = min(desired, available)
 
@@ -208,7 +211,7 @@ def plot_pid_results(
     print(f"Saved plot to {out.absolute()}")
 
 
-def plot_pid_results_exp(
+def plot_pid_results_sigmoid(
     hours,
     opps,
     probs,
@@ -217,14 +220,14 @@ def plot_pid_results_exp(
     runtime_hours,
     theta,
     out_path: str,
-    title: str = "PID Tracking - Exponential Target",
+    title: str = "PID Tracking - Sigmoid Target",
 ):
     times = np.array(hours)
     opps_arr = np.array(opps)
     probs_arr = np.array(probs)
     cum_arr = np.array(cumulative)
 
-    # Exponential target: y = 1 - (1 - x) * exp(-theta * x)
+    # Sigmoid target: y = 1 - (1 - x) * exp(-theta * x)
     x_norm = times / runtime_hours
     target_selected = budget * (1 - (1 - x_norm) * np.exp(-theta * x_norm))
 
@@ -262,18 +265,18 @@ def plot_pid_results_exp(
 def plot_hourly_impressions_comparison(
     hours,
     selected_pid,
-    selected_exp,
+    selected_sigmoid,
     out_path: str,
     title: str = "Hourly Selected Impressions Comparison",
 ):
-    """Plot hourly impressions for both PID and EXP methods side by side."""
+    """Plot hourly impressions for both PID and Sigmoid methods side by side."""
     fig, ax = plt.subplots(figsize=(12, 6))
     
     x = np.arange(len(hours))
     width = 0.35
     
     ax.bar(x - width/2, selected_pid, width, label="PID", alpha=0.8)
-    ax.bar(x + width/2, selected_exp, width, label="EXP", alpha=0.8)
+    ax.bar(x + width/2, selected_sigmoid, width, label="Sigmoid", alpha=0.8)
     
     ax.set_xlabel("Hour")
     ax.set_ylabel("Selected Impressions")
@@ -334,9 +337,9 @@ def main():
     save_csv("pid_simulation_pid.csv", hours_s, opps_s, desired_s, probs_s, selected_s, cum_s)
     plot_pid_results(hours_s, opps_s, probs_s, cum_s, budget, runtime_hours, out_path="pid_simulation_pid.png")
 
-    # Run exponential simulation
+    # Run sigmoid simulation
     theta = 0.4
-    hours_e, opps_e, desired_e, probs_e, selected_e, cum_e = simulate_pid_with_opps_schedule_exp(
+    hours_s2, opps_s2, desired_s2, probs_s2, selected_s2, cum_s2 = simulate_pid_with_opps_schedule_sigmoid(
         budget=budget,
         runtime_hours=runtime_hours,
         opps_schedule=available,
@@ -344,13 +347,13 @@ def main():
         stochastic=False,
     )
 
-    save_csv("pid_simulation_exp.csv", hours_e, opps_e, desired_e, probs_e, selected_e, cum_e)
-    plot_pid_results_exp(hours_e, opps_e, probs_e, cum_e, budget, runtime_hours, theta=theta, out_path="pid_simulation_exp.png")
+    save_csv("pid_simulation_sigmoid.csv", hours_s2, opps_s2, desired_s2, probs_s2, selected_s2, cum_s2)
+    plot_pid_results_sigmoid(hours_s2, opps_s2, probs_s2, cum_s2, budget, runtime_hours, theta=theta, out_path="pid_simulation_sigmoid.png")
 
     # Plot hourly impressions comparison
-    plot_hourly_impressions_comparison(hours, selected_s, selected_e, out_path="hourly_impressions_comparison.png")
+    plot_hourly_impressions_comparison(hours, selected_s, selected_s2, out_path="hourly_impressions_comparison.png")
 
-    print(f"Exponential final selected = {cum_e[-1]:.2f} (target {budget})")
+    print(f"Sigmoid final selected = {cum_s2[-1]:.2f} (target {budget})")
     print(f"PID final selected = {cum_s[-1]:.2f} (target {budget})")
 
 
