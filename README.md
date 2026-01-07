@@ -2,21 +2,21 @@
 
 ## Overview
 
-This project implements and evaluates a two-tier pacing algorithm for ad campaign delivery optimization. The algorithm combines **PID (Proportional-Integral-Derivative) control** for primary allocation and **Sigmoid distribution** as an upper bound for redistribution, ensuring efficient budget utilization while respecting campaign delivery constraints.
+This project implements and evaluates a two-tier pacing algorithm for ad campaign delivery optimization. The algorithm combines **linear (ideal) delivery** for primary allocation and **Sigmoid distribution** as an upper bound for redistribution. **PID (Proportional-Integral-Derivative) control** is used to dynamically adjust delivery goal based on real-time traffic pattern, to calculate the selection probabilities for both linear and sigmoid delivery pattern.
 
 ## Algorithm Architecture
 
 ### Two-Phase Approach
 
 #### Phase 1: Offline Calculation
-Before campaign execution, we calculate two delivery probabilities:
-1. **PID Probability**: Based on linear delivery curve, adjusted with actual traffic patterns
-2. **Sigmoid Probability**: Based on configurable front-loaded delivery curve
+We calculate two delivery probabilities offline:
+1. **Linear Probability**: Based on linear (ideal) delivery curve, adjusted with actual traffic patterns
+2. **Sigmoid Probability**: Based on configurable front-loaded delivery curve, adjusted with actual traffic patterns
 
 #### Phase 2: Online Redistribution
 During campaign execution:
-1. **Primary allocation**: Use PID algorithm for all available campaigns
-   - Dynamically adjusts delivery rate based on error between ideal and actual spend
+1. **Primary allocation**: Use linear probability for all available campaigns
+   - Dynamically adjusts delivery rate based on available impressions
 2. **Secondary allocation**: If remaining budget and impressions exist
    - Reconsider all campaigns using Sigmoid upper bound probabilities
    - Maximize utilization of available traffic

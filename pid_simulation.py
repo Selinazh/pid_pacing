@@ -231,8 +231,6 @@ def plot_pid_results_sigmoid(
     x_norm = times / runtime_hours
     target_selected = budget * (1 - (1 - x_norm) * np.exp(-theta * x_norm))
 
-    target_linear = x_norm * budget
-
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), sharex=True)
     ax1.plot(times, probs_arr, label="Selection Probability", color="C0", marker="o")
     ax1.set_ylabel("Probability")
@@ -240,7 +238,7 @@ def plot_pid_results_sigmoid(
     ax1.legend()
 
     ax2.plot(times, cum_arr, label="Cumulative Selected", color="C1")
-    ax2.plot(times, target_linear, label="Target Cumulative (Linear)", color="C2", linestyle="--")
+    ax2.plot(times, target_selected, label="Target Cumulative (Sigmoid)", color="C2", linestyle="--")
     ax2.set_ylabel("Cumulative Selections")
     ax2.set_xlabel("Time (hours)")
     ax2.grid(alpha=0.3)
